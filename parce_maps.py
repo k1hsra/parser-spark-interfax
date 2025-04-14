@@ -12,13 +12,20 @@ headers ={
 }
 
 def get_url():
-    for page in range(2,3):  # кол-во страниц (указать)
+    for page in range(60,65):  # кол-во страниц (указать)
 
-        url = f"https://spark-interfax.ru/map/nizhegorodskaya-oblast/{page}" #generator url page
-        response = requests.get(url)
+
+        url = f"https://spark-interfax.ru/map/nizhegorodskaya-oblast/{page}" #generator url page/ вставить по примеру
+        while True:
+            try:
+                response = requests.get(url)
+                response.raise_for_status() #Проверка статуса ответа
+                break #Если запрос успешен,выходим из цикла
+            except requests.exceptions.RequestException as e:
+                print(f'Ошибка при подключении к {url}: {e}. Повторная попытка подключения через 5 секунд...')
+                sleep(5)
         soup=BeautifulSoup(response.text,'lxml') #html parser
         data = soup.find_all('li', class_="raiting-list__item") #поиск всех названий
-
         for i in data: #записываем в лист карточки
             info_company='https://spark-interfax.ru'+i.find('a').get('href')
             yield info_company
@@ -26,9 +33,16 @@ def get_url():
 def array():
 
     for card_url in get_url():
+        while True:
+            try:
 
-        response = requests.get(card_url)
-        sleep(3)
+                response = requests.get(card_url)
+                response.raise_for_status()
+                break
+            except requests.exceptions.RequestException as e:
+                print(f'Ошибка при подключении к {card_url: {e}. Повторная попытка через 5 секунд...}')
+                sleep(5)
+        sleep(1)
         soup = BeautifulSoup(response.text, 'lxml')
 
         data = soup.find('div', class_="padding-top-10") #url main card
@@ -46,5 +60,4 @@ def array():
         yield name, inn, main_specialization_str, additional_specialization_str, description
         #print(name,inn,main_specialization,additional_specialization,description, sep='\n')
 
-    #     if reguest.status_code == '200':
 
